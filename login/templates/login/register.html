@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+{% load staticfiles %}
+
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-theme.css' %}">
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+     <![endif]-->
+
+    <title>注册</title>
+    <style>
+        li{color: #ff592e }
+    </style>
+</head>
+<body style="background-image: url('{{wallpaper}}');background-size: 100%">
+    <div class="container col-sm-3" style="position:absolute;top:25%;left:38%;">
+        <div class="row table-bordered" style="background:#f2f2f2;padding:8px;border-radius:8px">
+            <h3 style="text-align: center;margin:12px">注册</h3>
+            <form id="form" role="form" action="" method="post">
+                {% csrf_token %}
+                <div id="form-group" class="form-group">
+                    {{form}}
+                    <ol>
+                    {% if error %}
+                        {% for ele in error %}
+                            <li id="forminfo"><strong>{{ele}}</strong></li>
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                </div>
+            </form>
+            <button id="reg" class="btn btn-primary col-sm-offset-5">注册</button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+                $('#reg').on('click',function () {
+                    forminfo=''
+                    var username=$('#id_username').val();
+                    var userpas1=$('#id_password1').val();
+                    var userpas2=$('#id_password2').val();
+                    var realname=$('#id_userrealname').val();
+                    forminfo=username+';'+userpas1+';'+userpas2+';'+realname
+                    console.log(forminfo)
+                    $.post('/login/register/',{registerinfo:forminfo},
+                        function (data){
+                            alert(data);
+                            console.log(data)
+                            if (data==['注册成功']){
+                                window.location.href='/login/'
+                            }
+
+                        });
+                });
+        });
+    </script>
+</body>
+</html>

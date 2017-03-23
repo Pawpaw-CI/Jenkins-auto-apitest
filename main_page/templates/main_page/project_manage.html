@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+{% load staticfiles %}
+
+<html lang="zh-CN" style="height:100%;">
+<head>
+    <meta charset="utf-8">
+    <script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+    <script src="/static/bootstrap/js/bootbox.min.js"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-theme.css' %}">
+
+    <title>项目管理</title>
+
+</head>
+<body style="height: 100vh; background-image: url('/static/img/mainpagewall.jpg');background-size: 100%">
+<div id="mainpage" style="height: 90vh;overflow: hidden">
+    {% csrf_token %}
+
+    <div id="header" style="max-height: 10vh">
+        <nav class="navbar navbar-default" style="">
+          <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                  <li class="dropdown">
+                      <a onclick="to_basicpage()" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                         aria-expanded="false">项目选择 <span class="caret"></span></a>
+
+                  </li>
+                  <li><a href="#">项目管理</a></li>
+              </ul>
+              <form class="navbar-form navbar-right" style="display: none">
+                <div class="form-group">
+                  <input type="text" class="form-control" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-default">Submit</button>
+              </form>
+              <ul class="nav navbar-nav navbar-right">
+                <li><a onclick="log_out()">{{user_name}}  注销</a></li>
+               </ul>
+            </div>
+          </div>
+        </nav>
+    </div>
+
+    <div id="main_body" style="padding:0px;margin:auto;max-width: 45vh;max-height: 90vh;">
+
+        <div id="project_list" class="panel panel-default">
+
+            <div class="panel-heading" style="padding: 1px;"><h5>项目管理</h5></div>
+
+            <div class="panel-body" style="padding: 1px;">
+
+                <div class="model-form" style="display: none">
+                    <form class="form-inline" style="margin: 5px;">
+                        <a data-target="#project-detail" id="added-project" class="list-group-item"
+                               style="text-align: center" data-toggle="modal" data-whatever="{{ele}}">{{ele}}</a>
+                  </form>
+                </div>
+
+                <div id="project-form" >
+                        <div id="list-group" style="margin: 5px;max-height: 62vh;overflow: hidden">
+                            {% for ele in project_list %}
+                                <a data-target="#project-detail" id="project-control" class="list-group-item"
+                                style="text-align: center" data-toggle="modal" data-whatever="{{ele}}">{{ele}}</a>
+                            {% endfor %}
+                        </div>
+
+                    <a href="#add-project" data-toggle="modal" class="btn btn-default" style="margin-left: 39%;width: 9vh">+</a>
+                </div>
+
+                <div id="project-detail" class="modal" >
+                    <div class="modal-dialog" style="margin-top: 8%">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="false">&times;</button>
+                                <h4>项目变更</h4>
+                            </div>
+                            <div class="modal-body">
+                                <label>项目名称</label>
+                                <input id="project-name" class="form-control">
+                                <label>模块列表</label>
+                                <div id="project-modules-presentation" style="max-height: 35vh;overflow: hidden">
+                                </div>
+                                <div id="project-modules-model" style="display: none">
+                                    <div class="form-inline" style="margin-left: 15%">
+                                        <input class="form-control" style="width:45vh;">
+                                        <button id="model-save" class="form-control" onclick="save_module_name(this)">save</button>
+                                        <button id="model-del" class="form-control" onclick="remove_module(this)">del</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <a class="btn" style="margin-left: 50px"  data-dismiss="modal" >取消</a>
+                                <a onclick="delete_project()" class="btn btn-warning " style="margin-left: 50px" >删除该项目</a>
+                                <a onclick="rename_project()" class="btn btn-primary " style="margin-left: 50px">保存修改</a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="add-project" class="modal" >
+                    <div class="modal-dialog" style="margin-top: 16%">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="false">&times;</button>
+                                <h4>新增项目</h4>
+                            </div>
+                            <div class="modal-body">
+                                <label>项目名称</label>
+                                <input id="project-name-input" class="form-control">
+                            </div>
+                            <div class="modal-footer">
+                                <a class="btn" style="margin-left: 50px"  data-dismiss="modal" >取消</a>
+                                <a onclick="add_project()" class="btn btn-primary " style="margin-left: 50px">保存</a>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+   </div>
+</div>
+
+</div>
+</body>
+<script type="text/javascript">
+    window.module_name_list=[]
+    function add_project() {
+        var name=jQuery("div.modal-body input#project-name-input").val()
+        jQuery.post('/main_page/project_manage/',{msgtype:'add_project',msgdata:[name]},
+            function (msg) {
+                msg=jQuery.parseJSON(msg)
+                if (msg.state) {
+                    bootbox.alert('Success！',function () {
+                        var new_element=jQuery("div.model-form form.form-inline a").clone()
+                        jQuery(new_element).data('whatever',name);
+                        jQuery(new_element).text(name).prependTo("div.panel-body div#project-form div#list-group")
+                        jQuery("#add-project").modal('hide')
+                    })
+
+                }
+                else{
+                    bootbox.alert(msg.data)
+                }
+            })
+    }
+
+    jQuery(function () {
+        jQuery("#project-detail").on('show.bs.modal',function (event) {
+            window.button=jQuery(event.relatedTarget)
+            var name = jQuery(event.relatedTarget).data('whatever')
+            window.project_name=name
+            var modal = jQuery(this)
+            modal.find('.modal-body input').val(name)
+            jQuery("div#project-modules-presentation div.form-inline").remove()
+            jQuery.get('/main_page/',{msgtype:'select-project',msgdata:[name]},
+            function (msg) {
+                if (msg.state){
+                    window.module_name_list=msg.data
+                    for (ele in msg.data){
+                        var tmp= jQuery("div#project-modules-model div.form-inline").clone()
+                        jQuery(tmp.children('input')).val(msg.data[ele])
+                        jQuery(tmp).appendTo("div#project-modules-presentation");
+                    }
+                }
+                else {bootbox.alert(msg.data)}
+            },'json')
+        })
+    })
+
+    function delete_project() {
+        project_name=jQuery('.modal-body input').val()
+        bootbox.confirm('误操作后果将很严重，确定要删除该项目？',function (result) {
+            if (result == true){
+                jQuery.post('/main_page/project_manage/',{msgtype:'remove_project',msgdata:[project_name]},
+                function (msg) {
+                    msg=jQuery.parseJSON(msg)
+                    if (msg.state){
+                        bootbox.alert('Success!',function () {
+                            window.button.remove()
+                            jQuery("#project-detail").modal('hide')
+                        })
+                    }
+                    else {
+                        bootbox.alert(msg.data)
+                    }
+                })
+            }
+        })
+    }
+
+    function rename_project() {
+        new_project_name = jQuery('.modal-body input').val()
+        bootbox.confirm('确定将该项目改名为：' + new_project_name + '?', function (result) {
+            if (result == true) {
+                jQuery.post('/main_page/project_manage/', {msgtype:'rename_project', msgdata: [window.project_name,new_project_name]},
+                    function (msg) {
+                        msg = jQuery.parseJSON(msg);
+                        if (msg.state) {
+                            bootbox.alert('Success!',function () {
+                                jQuery("#project-detail").modal('hide')
+                            })
+                            window.button.text(new_project_name)
+                        }
+                        else {
+                            bootbox.alert(msg.data);
+                        }
+                    })
+            }
+        })
+    }
+    
+    function to_basicpage(opp) {
+        jQuery(opp).addClass("active");
+        window.location.href='/main_page/';
+    }
+
+    function save_module_name(opp) {
+        var new_name=jQuery(opp).parent().children('input').val()
+        var module_list=jQuery(opp).parent().parent()
+        for (i=0;i<module_list.children().length;i++){
+            if (module_list.children()[i] == jQuery(opp).parent()[0]){
+                var old_name=window.module_name_list[i]
+                jQuery.post('/main_page/project_manage/',{msgtype:'rename_module',msgdata:[window.project_name,old_name,new_name]},
+                function (msg) {
+                    msg = jQuery.parseJSON(msg);
+                    if (msg.state){
+                        bootbox.alert('Success!')
+                    }
+                    else{
+                        bootbox.alert(msg.data);
+                    }
+                })
+            }
+        }
+    }
+
+    function remove_module(opp) {
+        bootbox.confirm('删除后无法恢复，确定要删除该模块？',function (result) {
+            if (result == true) {
+                var module_list = jQuery(opp).parent().parent()
+                for (i = 0; i < module_list.children().length; i++) {
+                    if (module_list.children()[i] == jQuery(opp).parent()[0]) {
+                        var old_name = window.module_name_list[i]
+                        jQuery.post('/main_page/project_manage/', {msgtype: 'remove_module',msgdata: [window.project_name, old_name]},
+                            function (msg) {
+                                msg = jQuery.parseJSON(msg)
+                                if (msg.state) {
+                                    bootbox.alert('Success!')
+                                    jQuery(opp).parent().remove();
+                                }
+                                else {
+                                    bootbox.alert(msg.data);
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        })
+    }
+
+    function log_out() {
+        bootbox.confirm('确定注销当前账号？',function (reuslt) {
+            if (reuslt){
+                jQuery.post('/main_page/',{msgtype:'log_out',msgdata:[]}, function (msg) {
+                    if (msg){bootbox.alert('注销成功！', function () {
+                        location.href='/login/'
+                        })
+                    }
+                    else{
+                        bootbox.alert(msg.data)
+                    }
+                })
+            }
+        })
+   }
+</script>
+</html>;

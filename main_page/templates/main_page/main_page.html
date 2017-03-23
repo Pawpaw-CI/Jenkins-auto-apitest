@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+{% load staticfiles %}
+
+<html lang="zh-CN" style="height:100%;">
+<head>
+    <meta charset="utf-8">
+    <script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+
+    <script src="/static/bootstrap/js/bootstrap.js"></script>
+    <script src="/static/bootstrap/js/bootbox.min.js"></script>
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-theme.css' %}">
+
+    <title>接口自动化用例管理</title>
+    <style>
+        input{padding:1px;}
+    </style>
+</head>
+<body style="height: 100vh; background-image: url('/static/img/mainpagewall.jpg');background-size: 100%">
+<div id="mainpage" style="height: 90vh;overflow: hidden;">
+    {% csrf_token %}
+
+    <div id="header" style="max-height: 10vh">
+        <nav class="navbar navbar-default" style="">
+          <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                  <li style="display: none"><a id="selected-project"></a></li>
+                  <li class="dropdown">
+
+                      <a id="select-project" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                         aria-expanded="false"> 项目选择 <span class="caret"></span></a>
+                      <ul class="dropdown-menu" style="max-height:300px;overflow: hidden">
+                          {% for project in project_list %}
+                               <li><a class="btn" onclick="get_project_modules(this)">{{project}}</a></li>
+                          {% endfor %}
+                      </ul>
+                  </li>
+                  <li><a href="project_manage/">项目管理</a></li>
+              </ul>
+              <form class="navbar-form navbar-right" style="display: none">
+                <div class="form-group">
+                  <input type="text" class="form-control" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-default">Submit</button>
+              </form>
+              <ul class="nav navbar-nav navbar-right">
+                <li><a href="#" onclick="log_out()">{{user_name}}  注销</a></li>
+               </ul>
+                <ul class="nav navbar-nav navbar-right">
+                <li><a href="#help" data-toggle="modal">帮助</a></li>
+                    <div id="help" class="modal" >
+                    <div class="modal-dialog" style="margin-top: 0.5%;margin-left: 10%">
+                        <div class="modal-content" style="width: 950px">
+                            <div class="modal-header" style="padding: 5px;">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="false">&times;</button>
+                                <h6>功能介绍</h6>
+                            </div>
+                            <div class="modal-body" style="padding: 0px;">
+                                <img src="{% static 'img/django_help.png' %}" style="width:900px">
+                            </div>
+                            <div class="modal-footer" style="padding: 0px;">
+                                <a class="btn" data-dismiss="modal">关闭</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+               </ul>
+            </div>
+          </div>
+        </nav>
+    </div>
+
+    <div id="main_body" style="padding: 0px;margin:0px;max-height: 80vh;">
+
+        <div id="module" class="col-sm-2" >
+            <div class="module-list-group" style="max-height:75vh;overflow: hidden">
+                <a href="#add_module_modal" id="add_module" class="list-group-item" style="text-align: center" data-toggle="modal">+</a>
+                <div id="add_module_modal" class="modal" >
+                    <div class="modal-dialog" style="margin-top: 16%">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="false">&times;</button>
+                                <h4>请输入新的模块名称</h4>
+                            </div>
+                            <div class="modal-body">
+                                <input id="modal-input" class="form-control">
+                            </div>
+                            <div class="modal-footer">
+                                <a class="btn" data-dismiss="modal">关闭</a>
+                                <a onclick="add_new_modules()" class="btn btn-primary">保存修改</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="add-module-model" style="display: none">
+                <a id="added-module" class="list-group-item" onclick="get_module_testcases(this)"></a>
+            </div>
+        </div>
+
+        <div id="testcase" class="col-sm-10" style="margin-left: -30px;max-height: 75vh">
+            <div class="container-fluid">
+                <div class="panel panel-default" style="width: 1050px;background: none">
+                    <div class="panel-heading" style="height: 30px">
+                        <label style="width: 15.83%;">名称</label>
+                        <label style="width: 15.83%;">功能</label>
+                        <label style="width: 15.83%;">地址</label>
+                        <label style="width: 15.83%;">传递信息</label>
+                        <label style="width: 15.83%;">验证变量</label>
+                        <label style="width: 15.83%;">全局变量</label>
+                    </div>
+
+
+
+                    <div class="panel-body" style="padding:8px;max-height: 70vh;overflow: hidden;">
+                        <div id="form-group">
+
+                        {% for ele in testcase_list %}
+                            <form class="form-inline" style="margin:5px">
+                                {% for var in ele %}
+                                    {% if forloop.counter0 <= 1 %}
+                                        <input type="text" class="form-control" onfocus="javascript:this.style.width='30%';" style="width: 8%;padding:1px" value="{{var}}"}>
+                                    {% elif forloop.counter0 == 2 %}
+                                        <input type="text" class="form-control" style="width: 26%;padding:1px" value="{{var}}"}>
+                                    {% elif forloop.counter0 == 3 %}
+                                        <input type="text" class="form-control" style="width: 20%;padding:1px" value="{{var}}"}>
+                                    {% else %}
+                                        <input type="text" class="form-control" style="padding:1px" value="{{var}}"}>
+                                    {% endif %}
+                                {% endfor %}
+                                <a class="btn btn-default btn-xs" onclick="reduce_testcase(this)">-</a>
+                            </form>
+                        {% endfor %}
+
+                        </div>
+                        <div class="model-form" style="display: none">
+                                <form id='add_testcase_form' class="form-inline" style="margin:5px;">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <input type="text" class="form-control " onfocus="auto_l(this)" onblur="auto_s(this)" style="transition: 400ms ease;width: 15.83%;padding:1px" value="">
+                                    <a class="btn btn-default btn-xs" onclick="reduce_testcase(this)">-</a>
+                                </form>
+                        </div>
+
+                        <button class="btn btn-default" style="width:50px;margin-left:45%;margin-top: 1%" onclick="add_testcase()">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="run-modal">
+            <div id="run-testcase" class="modal" >
+                    <div class="modal-dialog" >
+                        <div class="modal-content" style="width: 150vh;margin-left: -26vh" >
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="false">&times;</button>
+                                <h5>请选择需要运行的模块</h5>
+                            </div>
+                            <div class="modal-body col-sm-12" >
+                                <div id="select-run-modules" class="col-sm-3" >
+                                    <div id="models" style="display: none">
+                                            <label class="col-sm-12">
+                                                <input type="checkbox" name="check1" id="percheck"/>
+                                                <span class="label-text"></span>
+                                            </label>
+                                    </div>
+                                    <div id="module-represent" style="max-height: 80vh;overflow: hidden">
+                                    </div>
+                                    <label class="col-sm-12" style="margin-top: 10%">
+                                        <input type="checkbox" name="check-all" id="checkall"/>
+                                        <span class="label-text">全选</span>
+                                    </label>
+
+                                </div>
+
+                                <div id="result-represent" class="col-sm-9" style="padding: 5px">
+                                    <div id="log-represent" style="width: 110vh;height: 62vh;max-height: 62vh;overflow:auto;">
+                                        <!--label style="width: 100vh;height: 62vh;max-width:100vh;max-height: 62vh;overflow:scroll;"></label-->
+                                    </div>
+
+                                    <div id="log-model" style="display: none">
+                                        <p id="single-log" style="white-space: pre; margin: 0px"></p>
+                                    </div>
+
+                                    <div id="html-link" style="display: none">
+                                        <p class="col-sm-4 col-sm-offset-2" style="color: #0e90d2">详细报告请点击右侧链接：</p>
+                                        <a id="href-report" class="link col-sm-2">report</a>
+                                        <a id="href-log" class="link col-sm-2">log</a>
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+                            <div class="modal-footer">
+                                <a class="btn col-sm-offset-4 col-sm-1" data-dismiss="modal">关闭</a>
+                                <a onclick="run()" class="btn btn-success col-sm-offset-3 col-sm-2">GO!</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+    </div>
+</div>
+<div id="trans" style="max-height:10vh">
+            <button class="btn btn-primary" style="width: 100px;margin-left:35%;" onclick="save_testcase()">保存</button>
+            <button id="btn-start" class="btn btn-success" style="width: 100px;margin-left:15%" >运行</button>
+
+</div>
+<script type="text/javascript">
+    jQuery.fn.modal.Constructor.DEFAULTS.keyboard = true
+    window.project_name=''
+    window.module_name=''
+    window.testcase=''
+    window.module=''
+    function get_project_modules(opp) {
+        var project_name=jQuery(opp).text();
+        jQuery("ul.dropdown-menu li a.btn.active").removeClass('active')
+        jQuery(opp).addClass("active")
+        window.project_name=project_name
+        jQuery.get('/main_page/',{msgtype:'select-project',msgdata:[project_name]},
+            function (msg) {
+                if (msg.state){
+                    jQuery("a#selected-project").parent().show()
+                    jQuery("a#selected-project").text(project_name)
+                    jQuery("div.module-list-group a#added-module").remove();
+                    for (ele in msg.data){
+                        jQuery("div#add-module-model a").clone().text(msg.data[ele]).prependTo("div.module-list-group");
+                    }
+                    jQuery("div#form-group form#add_testcase_form").remove()
+                }
+                else {bootbox.alert(msg.data)}
+            },'json')
+    }
+
+    function add_new_modules(){
+        var new_module_name=jQuery("input#modal-input.form-control").val();
+        if (window.project_name == ''){
+            bootbox.alert('请先进行项目选择')
+        }
+        else{
+        jQuery.post('/main_page/',{msgtype:'add-module',msgdata:[window.project_name,new_module_name]},
+            function (msg) {
+                if (msg.state) {
+                    jQuery("div.module-list-group a#added-module.list-group-item").remove();
+                    var data=jQuery.parseJSON(msg.data)
+                    for (ele in data) {
+                        jQuery("div#add-module-model a").clone().text(data[ele]).prependTo("div.module-list-group");
+                    }
+                    var addedlist=jQuery("div#module div.module-list-group")
+                    for (var i=0;i<addedlist.children().length;i++){
+                        if (addedlist.children()[i].text == window.module_name){
+                            jQuery(addedlist.children()[i]).addClass('active')
+                        }
+                    }
+                    bootbox.alert('添加成功',function () {
+                        jQuery("#add_module_modal").modal('hide')
+                        for (var i=0;i<addedlist.children().length;i++){
+                            if (addedlist.children()[i].text == new_module_name){
+                                jQuery(addedlist.children()[i]).click();
+                                window.module_name=new_module_name;
+                        }}
+
+                    })
+                }
+                else {
+                    bootbox.alert(msg.data)
+                }
+            },'json')
+        }
+    }
+
+    function save_testcase(){
+        var list=''
+        var forms=jQuery("div#form-group form").clone()
+        for (var i=0;i<forms.length;i++){
+            var single_part=''
+            for (var j=0;j<6;j++){
+                if (j < 3){
+                    if (jQuery(forms[i][j]).val() == ''){
+                        bootbox.alert('用例前三项为必填，请确认后提交')
+                        return
+                    }
+                }
+                if (j < 5){
+                    single_part=single_part+jQuery(forms[i][j]).val()+'<%&*>';
+                }
+                else{
+                    single_part=single_part+jQuery(forms[i][j]).val();
+                }
+            }
+            list=list+single_part+'<*&%>'
+        }
+        jQuery.post('/main_page/',{msgtype:'save-testcase',msgdata:[window.project_name,window.module_name,list]},
+            function (msg) {
+                if (msg.state){
+                    bootbox.alert('Success!')
+                }
+                else {
+                    bootbox.alert(msg.data)
+                }
+        },'json')
+    }
+
+    function get_module_testcases(opp) {
+        var module_name=jQuery(opp).text();
+        jQuery("div.module-list-group a.list-group-item.active").removeClass("active");
+        window.module=opp
+        jQuery(opp).addClass("active");
+        window.module_name=module_name;
+        jQuery.get('/main_page/',{msgtype:'select-module',msgdata:[window.project_name,window.module_name]},
+            function (msg) {
+                if (msg.state){
+                    jQuery("div.panel-body div#form-group form").remove();
+                    for (ele in msg.data){
+                        var form=jQuery("div.model-form form").clone()
+                        for (var i=0;i<6;i++){
+                            jQuery(form.children()[i]).val(msg.data[ele][i])
+                        }
+                        jQuery(form).appendTo("div.panel-body div#form-group");
+                    }
+                    window.testcase=msg.data
+                }
+                else {
+                    bootbox.alert(msg.data)
+                }
+            },'json')
+    }
+
+    function add_testcase() {
+        jQuery("div.model-form form").clone().appendTo("div.panel-body div#form-group");
+    };
+
+    function reduce_testcase(opp) {
+        bootbox.confirm('确定删除此行？',function (result) {
+            if (result == true){
+                jQuery(opp).parent().remove()
+            }
+        })
+    };
+
+
+    jQuery(function () {
+        jQuery("#btn-start").click(function () {
+            if (window.project_name == ''){
+                bootbox.alert('请先选择项目')
+            }
+            else{
+                jQuery("#run-testcase").modal('show')
+                jQuery.get('/main_page/', {msgtype: 'select-project', msgdata: [window.project_name]},
+                    function (msg) {
+                        if (msg.state) {
+                            jQuery("div#select-run-modules div#module-represent label").remove();
+                            for (ele in msg.data) {
+                                var tmp_clone = jQuery("div#select-run-modules div#models label").clone()
+                                jQuery(tmp_clone.children('span')).text(msg.data[ele])
+                                jQuery(tmp_clone).prependTo("div#select-run-modules div#module-represent");
+                            }
+                        }
+                        else {
+                            bootbox.alert(msg.data)
+                        }
+                    }, 'json')
+            }
+        })
+    })
+
+    $("#checkall").click(function(){
+        var isChecked = $(this).prop("checked");
+        $("input[type='checkbox']").prop("checked", isChecked);
+    });
+        
+    function run() {
+        jQuery("div#log-represent p#single-log").remove();
+        var tmp=jQuery("div#module-represent label")
+        var module_list=''
+        for (i=0;i<tmp.length;i++){
+            if (jQuery(tmp[i]).children('input').prop('checked') == true){
+                module_list=module_list+jQuery(tmp[i]).children('span').text()
+                if (i !=tmp.length-1){
+                    module_list+=','
+                }
+            }
+        }
+        jQuery.post('/main_page/',{msgtype:'prepare_run',msgdata:[window.project_name,module_list]},function (msg) {
+            if (msg.state){
+                for (lines in msg.data[0]){
+                    if ( msg.data[0][lines][1] == 'E' ){
+                        jQuery("div#log-model p#single-log").clone().text(msg.data[0][lines]).css("color","#9a0000").appendTo("div#result-represent div#log-represent")
+                    }
+                    else if (msg.data[0][lines][1] != 'S') {
+                        jQuery("div#log-model p#single-log").clone().text(msg.data[0][lines]).css("color", "#00ba00").appendTo("div#result-represent div#log-represent")
+                    }
+                    else {
+                        jQuery("div#log-model p#single-log").clone().text(msg.data[0][lines]).css("color", "#000000").appendTo("div#result-represent div#log-represent")
+                    }
+                }
+                window.local_path=msg.data[1]
+                jQuery("div#result-represent div#html-link").show()
+            }
+        },'json')
+    }
+
+    jQuery(function () {
+        jQuery(".link").click(function () {
+            var link = window.local_path + jQuery(this).text() + '.html'
+            window.open('/results'+link)
+        })
+    })
+
+   function log_out() {
+        bootbox.confirm('确定注销当前账号？',function (reuslt) {
+            if (reuslt){
+                jQuery.post('/main_page/',{msgtype:'log_out',msgdata:[]}, function (msg) {
+                    if (msg){bootbox.alert('注销成功！', function () {
+                        location.href='/login/'
+                        })
+                    }
+                    else{
+                        bootbox.alert(msg.data)
+                    }
+                })
+            }
+        })
+   }
+
+   function auto_l(opp) {
+       jQuery(opp).parent().children('input').css('width','4%');
+       jQuery(opp).css('width','75%');
+   }
+
+   function auto_s(opp) {
+
+       jQuery(opp).parent().children("input").css('width','15.83%');
+
+   }
+
+
+
+
+
+</script>
+
+</body>
+</html>
